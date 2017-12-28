@@ -1,0 +1,183 @@
+---
+title: "Capstone Project"
+author: "Anadi Risal"
+date: "11/26/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+Text Mining and N-grams
+========================================================
+
+This captone project will anaylyze three unstructured data and use it to predict the next word when a list of word/s are given. The project is broken in multiple components
+
+- Gettting and Cleaning the Data
+- Data Summary
+- Analysis of the Data
+- Summary of the Data - getting N-gram and using it for prediction.
+- Presentation of the results via shiny application
+
+Getting and Cleaning Data
+========================================================
+Three text files have been provided for machine learning.
+
+- collection of Tweets
+- collection of Blog entries
+- collection of News items
+
+Each are loaded into R. In this part of the project, we read and clean the data and provide quick summary.
+
+```{r}
+# The data shows NULL in it so we need to read it to take of of NULL
+setwd("/Users/anadirisal")
+blogs0 <- readLines("Downloads/Final/en_US/en_US.blogs.txt", skipNul = TRUE)
+news0 <- readLines("Downloads/Final/en_US/en_US.news.txt", skipNul = TRUE)
+twitter0 <- readLines("Downloads/Final/en_US/en_US.twitter.txt", skipNul = TRUE)
+```
+
+Data Summary
+=============================================================
+A summary of the files are calculated. We have calculated total no. of words, total no. of lines and maximum characters in the longest line for the Blogs, News and Twitter files respectively.
+```{r}
+library(stringr)
+get_summary <- function(file0){
+  len_line<-0
+  max_words<-0
+for(i in 1:length(file0)){
+            if (nchar(file0[i]) >len_line) {
+              len_line <- nchar(file0[i])}
+            max_words <- max_words + sum(stringr::str_count(file0[i], "\\S+"))
+            
+}
+c(length(file0),max_words,len_line)
+}
+
+list1 <-get_summary(blogs0)
+list2<-get_summary(news0)
+list3<-get_summary(twitter0)
+# if we wanted, system.time(list3<-get_summary(twitter0),gcFirst=TRUE)
+```
+
+```{r}
+# Graphs to plot the counts
+library(ggplot2)
+library(gridExtra)
+df <- data.frame(text.source = c("blog", "news", "twitter"), line.count = NA, word.count = NA, max.char.line= NA)
+
+df$line.count<-c(list1[1],list2[1],list3[1])
+df$word.count <-c(list1[2],list2[2],list3[2])
+df$max.char.line<-c(list1[3],list2[3],list3[3])
+
+
+gline <- ggplot(df, aes(x = factor(text.source), y = line.count/1e+06))
+gline <- gline + geom_bar(stat="identity") +  labs(y = "# of lines/million", x = "text source", title = "Count of lines")
+
+gword <- ggplot(df, aes(x = factor(text.source), y = word.count/1e+06))
+gword <- gword + geom_bar(stat="identity") + labs(y = "# of Words/million", x = "text source", title = "Count of words") 
+
+gchar.max <- ggplot(df, aes(x = factor(text.source), y = max.char.line/1000))
+gchar.max <- gchar.max + geom_bar(stat="identity") + labs(y = "# of Characters in lines/Thousands", x = "text source", title = "Count of Max Chars") 
+
+grid.arrange(gline, gword, gchar.max, ncol=3)
+
+```
+
+Conclusions from the data
+===================================
+We see that there are more 30 million words in each corpus. Similarly, there are about 1 million lines in news and blog with
+twitter having more than 2 million lines. Max characters in a line is in a blog exceeding 40 thousand with twitter having a consistent 140 chars.
+In order to be efficient, we need to sample the data.
+Next steps would be to carry out cleaning of data, frequency of words, N_gram analysis and designing prediction algorithms.
+
+
+
+Cleaning of the data
+===========================
+We will take perc% of the data for cleaning and exploratory analysis.
+
+All characters were converted to lower case and we remove punctuation and non ascii characters which would not be helpful for word prediction. Numbers are also removed below since we are less interested in them for word prediction. The data was also cleaned by removing stopwords of little significance and profanities from a given list so that we could briefly study the distribution of words in the data.
+
+```{r}
+
+
+library(tm)
+library(RWeka)
+library(textclean)
+library(stringi)
+library(ggplot2)
+library(qdap)
+set.seed(1)
+
+perc<- 1.0
+dat<-c(sample(blogs0,length(blogs0)*perc),sample(news0,length(news0)*perc), sample(twitter0,length(twitter0)*perc))
+#create just lower chars
+object.size(dat)
+dat2<-tolower(dat)
+
+dat2<-replace_non_ascii(dat2)
+
+
+dat2<-removeNumbers(dat2)
+
+dat2<-strip(dat2)
+
+dat2<-removeWords(dat2,stopwords("english"))
+
+dat2<-replace_white(dat2)
+# freq_terms <-freq_terms(dat2)
+
+# plot(freq_terms)
+```
+
+```{r}
+library(dplyr)
+library(tidytext)
+library(stringr)
+
+dat3 <- dat2[1:2000000]
+df <- data_frame(line=1:length(dat3), text=dat3)
+
+# ww <- df %>% unnest_tokens(word, text)
+
+df_trigrams <- df %>% 
+  unnest_tokens(Ngram, text, token = "ngrams", n = 4)
+
+
+df_trigrams <- df_trigrams %>%
+  count(Ngram, sort = TRUE) 
+#df_trigrams <- head(df_trigrams,20000)
+df_trigrams <- df_trigrams[df_trigrams$n > 1,]
+
+df_trigrams$result  <- word(df_trigrams$Ngram,-1)
+df_trigrams$Ngram <-gsub("\\s*\\w*$", "", df_trigrams$Ngram)
+write.csv(df_trigrams, "/Users/anadirisal/Dropbox/courses-master/09_DevelopingDataProducts/SwiftKeyRisal/df41.csv")
+```
+
+
+```{r}
+setwd("/Users/anadirisal/Dropbox/courses-master/09_DevelopingDataProducts/SwiftKeyRisal/")
+datafile1 <- read.csv("df51.csv", header=T, sep=",")
+  datafile2 <- read.csv("df52.csv", header=T, sep=",")
+
+  dim(datafile1)
+  dim(datafile2)
+
+  datafile <- rbind(datafile1,datafile2)
+  dim(datafile)
+  
+  write.csv(datafile,"df5.csv")
+  
+```
+  
+  
+
+
+Conclusion
+========================
+Interesting observations 1. Apostrophes had been unsuitably removed from the words during the cleaning as seen from the n-grams, hence the word prediction algorithm should account for this exception when cleaning the punctuation. 2. Stopwords need not be removed during pre-processing so that the trigrams would make more sense.
+
+Next Steps: This milestone report conducts the preliminary analysis of the word distribution and metadata of the text files which could be built upon subsequently in the next phase of the project. We could use an n-gram model for word prediction and iteratively reduce the size of n to recommend suitable words for input by the user.
