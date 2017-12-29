@@ -19,11 +19,18 @@ df_5gram <- read.csv("./df5.csv", stringsAsFactors = FALSE)
 predict_word <- function(x) {
   
   x <- tolower(x)
-  # x <- gsub("[^[:alnum:][:space:]]", " ", x)
+  x <- gsub("[0-9](?:st|nd|rd|th)", "", x, ignore.case=F, perl=T) #remove Numerals
+  x <- gsub("[.\\-!]", " ", x, ignore.case=F, perl=T) #remove Punctuation
+  x <- gsub("^\\s+|\\s+$", "", x) #trim Whitespace before and after
+  
   
   splitted <- unlist(strsplit(x, split=" "))
-  # print(splitted)
+  
   N <- length(splitted)
+  
+  if(N < 1)
+    stop('A word at least please.')
+  
   if(N >4){
     x<- sub('.*?(\\w+( \\w+){3})$', '\\1', x)
     splitted <- unlist(strsplit(x, split=" "))
@@ -39,6 +46,7 @@ predict_word <- function(x) {
       
       N <- 3
     }
+    
   }
   if (N==3) {
     index <- which(df_4gram$Ngram == x)
@@ -49,6 +57,7 @@ predict_word <- function(x) {
       
       N <- 2
     }
+    
   }
   if (N==2) {
     index <- which(df_3gram$Ngram == x)
@@ -59,6 +68,7 @@ predict_word <- function(x) {
       
       N <- 1
     }
+   
   }
  
   
@@ -66,17 +76,20 @@ predict_word <- function(x) {
     index <- which(df_2gram$Ngram == x)
     predicted <- df_2gram$result[index]
     if (identical(predicted, character(0))){
-      print('No words found...Try again!')
+      stop('No words found...Try again!')
     }
+    
   }
-  if(N < 1)
-    stop('1 word/s at least please.')
   
   
   
+# atmost N answer provided, here N is 1  
   
- 
-  print(predicted)
+  if(length(predicted) > 0)
+    predicted[1]
+  else
+    stop('No words found...Try again!')
+  
   
 }  
 
