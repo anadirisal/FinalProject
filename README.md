@@ -35,7 +35,7 @@ https://github.com/anadirisal/FinalProject
 
 2. Shiny Application is here:
 
-https://anadirisal.shinyapps.io/final/
+https://anadirisal.shinyapps.io/finalproject/
 
 Please allow a few minutes for all the data to load up after you enter the words. Once loaded, the application is pretty responsive. There may be cases where no matches are found and an error will be thrown. 
 
