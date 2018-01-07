@@ -8,21 +8,28 @@
 #
 
 library(shiny)
+
+
 # library(dplyr)
 # setwd("/Users/anadirisal/Dropbox/courses-master/09_DevelopingDataProducts/SwiftKeyRisal")
 # getwd()
-df_2gram <- read.csv("./df2.csv", stringsAsFactors = FALSE)
-df_3gram <- read.csv("./df3.csv", stringsAsFactors = FALSE)
-df_4gram <- read.csv("./df4.csv", stringsAsFactors = FALSE)
-df_5gram <- read.csv("./df5.csv", stringsAsFactors = FALSE)
+df_2gram <- read.csv("df2.csv", stringsAsFactors = FALSE)
+df_3gram <- read.csv("df3.csv", stringsAsFactors = FALSE)
+df_4gram <- read.csv("df4.csv", stringsAsFactors = FALSE)
+df_5gram <- read.csv("df5.csv", stringsAsFactors = FALSE)
 
 predict_word <- function(x) {
   
   x <- tolower(x)
-  x <- gsub("[0-9](?:st|nd|rd|th)", "", x, ignore.case=F, perl=T) #remove Numerals
-  x <- gsub("[.\\-!]", " ", x, ignore.case=F, perl=T) #remove Punctuation
-  x <- gsub("^\\s+|\\s+$", "", x) #trim Whitespace before and after
   
+  #remove Numerals
+  # x <- gsub("[0-9](?:st|nd|rd|th)", "", x, ignore.case=F, perl=T) 
+  # print (c("lower =",x))
+  #remove Punctuation
+  # x <- gsub("[.\\-!]", " ", x, ignore.case=F, perl=T) 
+  
+  #trim Whitespace before and after
+  x <- gsub("^\\s+|\\s+$", "", x) 
   
   splitted <- unlist(strsplit(x, split=" "))
   
@@ -68,30 +75,32 @@ predict_word <- function(x) {
       
       N <- 1
     }
-   
+    
   }
- 
+  
   
   if (N==1) {
     index <- which(df_2gram$Ngram == x)
     predicted <- df_2gram$result[index]
-    if (identical(predicted, character(0))){
-      stop('No words found...Try again!')
-    }
+    
     
   }
   
   
   
-# atmost N answer provided, here N is 1  
+  # atmost N answer provided, here N is 1 
   
-  if(length(predicted) > 0)
+  if (length(predicted) > 0) {
+    
     predicted[1]
+    
+  }
   else
-    stop('No words found...Try again!')
+    print('No words found...Delete words or type new ones!')
   
   
-}  
+  
+}
 
 
 

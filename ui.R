@@ -8,10 +8,6 @@
 #
 
 library(shiny)
-
-library(shiny)
-# library(shinythemes)
-
 shinyUI(fluidPage(
   # theme=shinytheme('cosmo'),
   titlePanel('Word Prediction App - quick and crude'),
